@@ -22,6 +22,7 @@
 	   :fsa-start-node
 	   :node-add-edge!
 	   :node-arity
+	   :node-reset
 	   :node-destinations
 	   :node-edges
 	   :node-final

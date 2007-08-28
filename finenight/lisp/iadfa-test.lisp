@@ -24,6 +24,12 @@
 					    "08WOOOL"
 					    "08WOOOOL")))
 
+;; bad behavior where the common-suffix was going too far.
+;; We had a cycle on the W (1 -W> 2 -O> 3 -O> 1).
+(defparameter *my-iadfa* (debug-gen-iadfa '("0060GIRLSXX"
+					    "0061TEENSX"
+					    "0061TEENSXX")))
+
 ;; the stem wasn't long enough).
 (defparameter *my-iadfa* (debug-gen-iadfa '("0-atransfers"
 					    "0-adance"

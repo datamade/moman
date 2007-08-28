@@ -6,6 +6,7 @@
 (defstruct iadfa 
   (ancestrors (make-array 1000000 :initial-element nil))
   (index 2) ;; this is used for automatic node name generation
+  (unused-nodes nil)
   (fsa (make-fsa :start-node (make-empty-node 0)))
   final)
 
@@ -36,22 +37,33 @@
 	  (hash-table-update! input ancestrors nodes
 			      (remove src-node nodes))))))
 
+(defun get-fresh-node (iadfa)
+  (if (null (iadfa-unused-nodes iadfa))
+      (make-empty-node (generate-state iadfa))
+      (let* ((unused-nodes (iadfa-unused-nodes iadfa))
+	     (new-node (node-reset (car unused-nodes))))
+	(setf (iadfa-unused-nodes iadfa) (cdr unused-nodes))
+	new-node)))
+	       
+
 (defun remove-ancestror-to-childs (iadfa node)
   (node-walk node #'(lambda (input destination-nodes)
 		      (dolist (dst-node destination-nodes iadfa)
 			(node-remove-ancestror! iadfa dst-node input node)))))
 
-(defun remove-last-nodes (iadfa node-label)
-  (do ((i node-label (+ i 1)))
-      ((> i (iadfa-index iadfa)))
-    (setf (aref (iadfa-ancestrors iadfa) i) nil))
-  (setf (iadfa-index iadfa) node-label))
+(defun remove-last-nodes (iadfa node node-end)
+  (declare (ignore node-end))
+  (let ((node-label (node-label node)))
+    (do ((i node-label (+ i 1)))
+	((> i (iadfa-index iadfa)))
+      (setf (aref (iadfa-ancestrors iadfa) i) nil))
+    (setf (iadfa-index iadfa) node-label)))
   
 
 (defun delete-branch (iadfa stem-start-node stem-start-input stem-end-node)
   (remove-ancestror-to-childs iadfa stem-end-node)
-  (let ((old-label (node-label (car (node-transition stem-start-node stem-start-input)))))
-    (remove-last-nodes iadfa old-label))
+  (let ((old-node (car (node-transition stem-start-node stem-start-input))))
+    (remove-last-nodes iadfa old-node stem-end-node))
   (node-remove-dsts-for-input! stem-start-node stem-start-input))
 
 
@@ -155,7 +167,7 @@
 	(last-input (car (last current-stem)))
 	(processing-stem (butlast current-stem)))
     (reduce #'(lambda (iadfa input)
-		(let ((new-node (make-empty-node (generate-state iadfa))))
+		(let ((new-node (get-fresh-node iadfa)))
 		  (setf (node-final new-node) (car profile))
 		  (setf profile (cdr profile))
 		  (iadfa-add-edge! iadfa last-node input new-node)
@@ -206,26 +218,34 @@
 	 (format t "~,2F w/h ~,2F Hours ~A ~A ~%"  nb-per-hours nb-hours-for-all index line)
 	 (handle-word iadfa (concatenate 'list line))
 	 (incf index)
-	 (if (zerop (mod index 10000))
+	 (if (zerop (mod index 1000))
 	     (let ((current-time (get-internal-real-time)))
-	       (setf nb-per-hours (float (* 10000 (/ 1 (/ (- current-time last-time) internal-time-units-per-second)) 60 60)))
-	       (setf nb-hours-for-all (float (/ (* 6500 (/ (- current-time last-time) internal-time-units-per-second)) 60 60)))
+	       (setf nb-per-hours (float (* 1000 (/ 1 (/ (- current-time last-time) internal-time-units-per-second)) 60 60)))
+	       (setf nb-hours-for-all (float (/ (* 65000 (/ (- current-time last-time) internal-time-units-per-second)) 60 60)))
 	       (setf last-time current-time)))
 	 iadfa))
     (iadfa-fsa iadfa)))
 
 
-
 (defun debug-gen-iadfa-from-file (file)
   (let ((iadfa (build-iadfa))
-	(index 0))
+	(index 0)
+	(last-time (get-internal-real-time))
+	(nb-per-hours 0)
+	(nb-hours-for-all 0))
     (for-each-line-in-file 
      file
      #'(lambda (line)
+	 (format t "~,2F w/h ~,2F Hours ~A ~A ~%"  nb-per-hours nb-hours-for-all index line)
 	 (handle-word iadfa (concatenate 'list line))
 	 (graphviz-export-to-file (make-fsa-builder-from-fsa (iadfa-fsa iadfa)) (concatenate 'string "output/iadfa" (format nil "~A" index) ".dot"))
 	 (graphviz-export-to-file (build-fsa-from-ancestrors iadfa) (concatenate 'string "output/iadfa-ances" (format nil "~A" index) ".dot"))
-	 (setf index (+ index 1))
+	 (incf index)
+	 (if (zerop (mod index 1000))
+	     (let ((current-time (get-internal-real-time)))
+	       (setf nb-per-hours (float (* 1000 (/ 1 (/ (- current-time last-time) internal-time-units-per-second)) 60 60)))
+	       (setf nb-hours-for-all (float (/ (* 65000 (/ (- current-time last-time) internal-time-units-per-second)) 60 60)))
+	       (setf last-time current-time)))
 	 iadfa))
     (iadfa-fsa iadfa)))
 
@@ -233,5 +253,4 @@
 ;;   (let ((fsa (iadfa-fsa))
 ;; 	(states (list (cons "" (fsa-start-node start)))))
 ;;     states))
-    
 

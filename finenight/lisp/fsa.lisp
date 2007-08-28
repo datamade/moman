@@ -13,6 +13,10 @@
 (defun make-empty-node (label)
     (make-node :label label))
 
+(defun node-reset (node)
+  (clrhash (node-symbols-map node))
+  (setf (node-final node) nil))
+
 (defun node-arity (node)
   (hash-table-count (node-symbols-map node)))
 
