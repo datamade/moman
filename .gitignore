@@ -1,0 +1,7 @@
+*.pyc
+*#
+#*
+*.lprof
+*.dat
+*.egg-info
+*~

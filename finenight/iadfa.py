@@ -80,8 +80,10 @@ class IncrementalAdfa(Dfa):
         equivatentState = None
         
         for state in self.register.keys():
+            print stateName, state
             if self.areEquivalents(state, stateName):
                 equivatentState = state
+                print 'foo', state, 
 
         return equivatentState
             
@@ -98,12 +100,12 @@ class IncrementalAdfa(Dfa):
         if not self.markedAsRegistered(childName):
             if self.hasChildren(childName):
                 self.replaceOrRegister(childName)
-            equivalentState = self.equivalentRegisteredState(childName)
-            if equivalentState is not None:
-                self.deleteBranch(childName)
-                self.states[stateName].transitions[lastSymbol] = equivalentState
-            else:
-                self.markAsRegistered(childName)
+            #equivalentState = self.equivalentRegisteredState(childName)
+            #if equivalentState is not None:
+            #    self.deleteBranch(childName)
+            #    self.states[stateName].transitions[lastSymbol] = equivalentState
+            #else:
+            self.markAsRegistered(childName)
 
 
     def deleteBranch(self, child):

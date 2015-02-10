@@ -178,24 +178,18 @@ class Nfa:
             f.write("}\n")
             f.close()
 
-
+    #@profile
     def areEquivalents(self, lhs, rhs):
         okay = True
 
-        lhsIsFinal = False
-        rhsIsFinal = False
-        if lhs in self.finalStates:
-            lhsIsFinal = True
-        if rhs in self.finalStates:
-            rhsIsFinal = True
-        if rhsIsFinal != lhsIsFinal:
-            okay = False
-        
         if self.states[lhs].transitions != self.states[rhs].transitions:
-            okay = False
+            return False
+
+        if lhs in self.finalStates != rhs in self.finalStates :
+            return False 
 
         if self.states[lhs].epsilon != self.states[rhs].epsilon:
-            okay = False
+            return False
 
         return okay
             

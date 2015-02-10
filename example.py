@@ -4,7 +4,7 @@ from finenight import fsc
 import csv
 from collections import defaultdict
 
-DISTANCE = 1
+DISTANCE = 3
 
 company_names = []
 

@@ -209,17 +209,6 @@ def isLikeStates(state, lowerStates):
     return isLike
     
 
-def delta( n, (stateType, index), character, input, states ):
-    cv = characterizedVector( character, input )[:(2 * n + 1)]
-    l = len(cv)
-    w = states[l]
-    cv = str(cv)
-
-    state = None
-    if w.has_key(cv) and w[cv].has_key(str(stateType)):
-        state = w[cv][str(stateType)]
-        state = (state[0], state[1] + index)
-    return state
 
 
 def final(n, state, index, wordLen):
@@ -245,17 +234,32 @@ class ErrorTolerantRecognizer:
     def recognize( self, word, fsa):
         words = []
         wordLen = len(word)
+        lstr = str
+        lint = int
         
         states = [("", fsa.startState, (str([(0,0)]), 0))]
         while len(states):
             (V, q, M) = states.pop()
+            word_chunk = word[M[1]:][:(2 * self.n + 1)]
+            word_states = self.transitionsStates[len(word_chunk)]
+            stateType, index = M
+
             for (x, q1) in fsa.states[q].transitions.items():
-                mPrime = delta( self.n, M, x, word[M[1]:], self.transitionsStates )
+                cv = [lint(char == x) for char in word_chunk]
+                cv = lstr(cv)
+                
+                state = word_states[cv][lstr(stateType)]
+                mPrime = (state[0], state[1] + index)
+
                 if mPrime[0] != []:
                     V1 = V + x
                     states.append((V1, q1, mPrime))
-            if q in fsa.finalStates and final(self.n, M[0], M[1], wordLen):
+            if q in fsa.finalStates and final(self.n, M[0], M[1], wordLen) :
                 words.append(V)
         return words
 
 
+
+def delta( (stateType, index), character, input, w ):
+    
+    return state
