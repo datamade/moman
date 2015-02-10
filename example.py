@@ -17,7 +17,11 @@ with open("company_names.csv") as f :
 
 sorted_names = [word for word in sorted(set(company_names)) if word]
 
-iadfa = iadfa.IncrementalAdfa(sorted_names, sorted=True)
+index = iadfa.IncrementalAdfa()
+for name in sorted_names :
+    index.createFromSortedListOfWords(name)
+
+index.initSearch()
 
 transition_states = recognize.getTransitionStates("finenight/levenshtein.dat",
                                                   DISTANCE)
@@ -27,7 +31,7 @@ etr = fsc.ErrorTolerantRecognizer(DISTANCE, transition_states)
 canopies = defaultdict(list)
 
 for i, name in enumerate(company_names) :
-    for near_name in etr.recognize(name, iadfa) :
+    for near_name in etr.recognize(name, index) :
         canopies[near_name].append((i, name))
 
 i = 0

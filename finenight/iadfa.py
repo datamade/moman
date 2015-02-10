@@ -7,18 +7,20 @@ class IncrementalAdfa(Dfa):
     constructed by a list of words.
     """
 
-    def __init__(self, words, nameGenerator = None, sorted = False):
+    def __init__(self, nameGenerator = None):
 
         if nameGenerator is None:
             nameGenerator = IndexNameGenerator()
             
         self.nameGenerator = nameGenerator
-        if sorted:
-            self.createFromSortedListOfWords(words)
-        else:
-            self.createFromArbitraryListOfWords(words)
+        self.register = {}
 
+        self.finalStates = []
+        self.startState = self.nameGenerator.generate()
+        self.states = {self.startState : State(self.startState)}
 
+    def initSearch(self) :
+        self.replaceOrRegister(self.startState)
         
 
     def getCommonPrefix(self, word):
@@ -117,22 +119,14 @@ class IncrementalAdfa(Dfa):
 
 
 
-    def createFromSortedListOfWords(self, words):
-        self.register = {}
+    def createFromSortedListOfWords(self, word):
+        if word.endswith('\n'):
+          word = word[:-1]
+        lastStateName, currentSuffix = self.getCommonPrefix(word)
+        if self.hasChildren(lastStateName):
+            self.replaceOrRegister(lastStateName)
+        self.addSuffix(lastStateName, currentSuffix)
 
-        self.finalStates = []
-        self.startState = self.nameGenerator.generate()
-        self.states = {self.startState : State(self.startState)}
-
-        lastWord = None
-        for word in words:
-            if word.endswith('\n'):
-              word = word[:-1]
-            lastStateName, currentSuffix = self.getCommonPrefix(word)
-            if self.hasChildren(lastStateName):
-                self.replaceOrRegister(lastStateName)
-            self.addSuffix(lastStateName, currentSuffix)
-        self.replaceOrRegister(self.startState)
     
 
     def createFromArbitraryListOfWords(self, words):
