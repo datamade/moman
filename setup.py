@@ -8,6 +8,5 @@ setup(name='Moman',
       author='Jean-Philippe Barrette-LaPierre',
       author_email='jpb_NO_SPAM@rrette.com',
       url='http://rrette.com/moman.html',
-      packages=['finenight'],
-      scripts=['finenight/recognize']
+      packages=['finenight']
       )
