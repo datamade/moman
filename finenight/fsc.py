@@ -1,40 +1,27 @@
 import copy
 import types
 import pdb
-from collections import defaultdict
+
 
 class Position:
     def __init__(self, i, e, isTransposition):
         self.isTransposition = isTransposition
         self.i = i
         self.e = e
-
-    def __hash__(self) :
-        try :
-            return self._hash 
-        except AttributeError :
-            h = self._hash = hash(tuple(eval(repr(self))))
-            return h
         
     def __str__(self):
-        if self.isTransposition :
-            val = str((self.i, self.e, 't'))
-        else :
-            val = str((self.i, self.e))
+        val = str((self.i, self.e))
+        if self.isTransposition:
+            val = 't' + val
         return val
 
     def __repr__(self):
-        try :
-            return self._repr
-        except AttributeError :
-            r = self._repr = str(self)
-            return r
+        return str(self)
 
     def __eq__(lhs, rhs):
-        #return lhs.i == rhs.i and \
-        #       lhs.e == rhs.e and \
-        #       lhs.isTransposition == rhs.isTransposition
-        return repr(lhs) == repr(rhs)
+        return lhs.i == rhs.i and \
+               lhs.e == rhs.e and \
+               lhs.isTransposition == rhs.isTransposition
 
     def __lt__(lhs, rhs):
         if lhs.i < rhs.i:
@@ -243,91 +230,36 @@ class ErrorTolerantRecognizer:
             transitionsStates = handCraftedStates
         self.transitionsStates = transitionsStates
         self.n = n
-        self.null_cvs = NullCV()
-        
-        new_states = []
-
-        for states in self.transitionsStates[:] :
-            new_dict = {}
-            for k_1, v_1 in states.items() :
-                new_dict_2 = {}
-                for k_2, v_2 in v_1.items() :
-                    try :
-                        k_2_list = eval(k_2) 
-                    except NameError :
-                        k_2_list = []
-                        for each in k_2.strip('[]').split('), ') :
-                            if 't' in each :
-                                each = each.strip('t') + ",'t'"
-
-                            if ')' not in each :
-                                each += ")"
-                            each_t = tuple(eval(each))
-                            k_2_list.append(each_t)
-                    new_dict_2[tuple(k_2_list)] = v_2
-                k_list = eval(k_1)
-                new_dict[tuple(k_list)] = new_dict_2
-            new_states.append(new_dict)
-
-        self.transitionsStates = new_states
-        
-
-    #@profile
+            
     def recognize( self, word, fsa):
         words = []
         wordLen = len(word)
-
         lstr = str
         lint = int
-        llen = len
-        window = 2 * self.n + 1
-        null_cvs = self.null_cvs
-        transitionsStates = self.transitionsStates
-        fsa_states = fsa.states
-        fsa_finalStates = set(fsa.finalStates)
-
-        states = [("", fsa.startState, ([(0,0)], 0))]
-        states_append = states.append
-        states_pop = states.pop
-
-        while states :
-            (V, q, M) = states_pop()
-
+        
+        states = [("", fsa.startState, (str([(0,0)]), 0))]
+        while len(states):
+            (V, q, M) = states.pop()
+            word_chunk = word[M[1]:][:(2 * self.n + 1)]
+            word_states = self.transitionsStates[len(word_chunk)]
             stateType, index = M
-            word_chunk = word[index:index+window]
 
-            chunk_size = llen(word_chunk)
-            word_states = transitionsStates[chunk_size]
+            for (x, q1) in fsa.states[q].transitions.items():
+                cv = [lint(char == x) for char in word_chunk]
+                cv = lstr(cv)
+                
+                state = word_states[cv][lstr(stateType)]
+                mPrime = (state[0], state[1] + index)
 
-            state_key = tuple(stateType)
-            
-
-            for (x, q1) in fsa_states[q].transitions.iteritems():
-                if x in word_chunk :
-                    cv = tuple([1 if char == x else 0 for char in word_chunk])
-                else :
-                    cv = null_cvs[chunk_size]
-
-                state = word_states[cv][state_key]
-
-                if state[0] :
-                    mPrime = (state[0], state[1] + index)
+                if mPrime[0] != []:
                     V1 = V + x
-                    states_append((V1, q1, mPrime))
-
-
-            if q in fsa_finalStates and final(self.n, M[0], M[1], wordLen) :
-                yield V
+                    states.append((V1, q1, mPrime))
+            if q in fsa.finalStates and final(self.n, M[0], M[1], wordLen) :
+                words.append(V)
+        return words
 
 
 
 def delta( (stateType, index), character, input, w ):
     
     return state
-
-
-class NullCV(defaultdict) :
-    def __missing__(self, key) :
-        value = self[key] = tuple([0]*key)
-        return value
-        
