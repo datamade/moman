@@ -122,6 +122,7 @@ class IncrementalAdfa(Dfa):
 
 
     def createFromSortedListOfWords(self, word):
+        word = unicode(word)
         if word.endswith('\n'):
           word = word[:-1]
         lastStateName, currentSuffix = self.getCommonPrefix(word)

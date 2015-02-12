@@ -1,3 +1,4 @@
+import possibleStates
 import copy
 import types
 import pdb
@@ -226,42 +227,24 @@ def final(n, state, index, wordLen):
         i = state[j].i + index
         e = state[j].e
         if wordLen - i + e <= n:
-            isFinal = True
+            isFinal = Truem
         j += 1
     return isFinal
 
     
 class ErrorTolerantRecognizer:
-    def __init__(self, n, fsa, transitionsStates = None):
-        if transitionsStates is None:
-            transitionsStates = handCraftedStates
-        self.transitionsStates = transitionsStates
-        self.n = n
-
-        new_states = {}
-        for i, states in enumerate(self.transitionsStates) :
-            cv_dict = {}
-            for cv, state_type in states.iteritems() :
-                cv_s = bitShift(eval(cv))
-                for k, v in state_type.items() :
-                    if k in cv_dict :
-                        cv_dict[k].update({cv_s : v})
-                    else :
-                        cv_dict[k] = {cv_s : v}
-            new_states[i] = cv_dict
-
-        self.transitionsStates = new_states
+    def __init__(self, fsa):
 
         self.fsa = fsa
         self.fsa_finalStates = set(fsa.finalStates)
 
-    def recognize( self, word):
+    def recognize(self, word, transitions, n):
+        states = [(u"", self.fsa.startState, [(0,0)], 0)]
 
-        states = [("", self.fsa.startState, [(0,0)], 0)]
-
-        results = innerLoop(states, word, 
-                            self.n, 
-                            self.transitionsStates, 
+        results = innerLoop(states, 
+                            word, 
+                            n, 
+                            transitions,
                             self.fsa.states, 
                             self.fsa_finalStates)
         
@@ -274,3 +257,21 @@ def bitShift(L) :
     out = (out << 1) | len(L)
 
     return out
+
+def transitions(distance) :
+    transition_states = possibleStates.genTransitions(distance)
+
+    new_states = {}
+    for i, states in enumerate(transition_states) :
+        cv_dict = {}
+        for cv, state_type in states.iteritems() :
+            cv_s = bitShift(eval(cv))
+            for k, v in state_type.items() :
+                if k in cv_dict :
+                    cv_dict[k].update({cv_s : v})
+                else :
+                    cv_dict[k] = {cv_s : v}
+            new_states[i] = cv_dict
+
+    return new_states
+

@@ -1,6 +1,9 @@
-# cython: c_string_type=unicode, c_string_encoding=utf8, boundscheck = False, wraparound = False, infer_types = True
+# cython: c_string_type=unicode, c_string_encoding=utf-8, boundscheck = False, wraparound = False, infer_types = True
 
-cpdef list innerLoop(states, 
+from cpython cimport array
+from array import array
+
+cpdef list innerLoop(list states, 
                      basestring word, 
                      int n, 
                      dict transitionsStates, 
@@ -12,8 +15,9 @@ cpdef list innerLoop(states,
     cdef list words = []
     cdef int window = 2 * n + 1
     cdef int wordLen = len(uword)
-    cdef basestring V, q, q1, x
-    cdef unicode word_chunk, each
+
+    cdef unicode word_chunk, each, x, V, V1
+    cdef bytes q, q1
     cdef list stateType, state_type, transitions
     cdef dict word_states
     cdef tuple state, all_state, transition
@@ -44,9 +48,10 @@ cpdef list innerLoop(states,
  
             state = word_states[cv]
             state_type, new_index = state
-	    
+
             if state_type :
-                states.append((V + x, 
+                V1 = V + x
+                states.append((V1, 
                                q1,
                                state_type,
                                new_index + index))

@@ -23,14 +23,14 @@ for name in sorted_names :
 
 index.initSearch()
 
-transition_states = possibleStates.genTransitions(DISTANCE)
+transition_states = fsc.transitions(DISTANCE)
 
-etr = fsc.ErrorTolerantRecognizer(DISTANCE, index, transition_states)
+etr = fsc.ErrorTolerantRecognizer(index)
 
 canopies = defaultdict(list)
 
 for i, name in enumerate(company_names) :
-    for near_name in etr.recognize(name) :
+    for near_name in etr.recognize(name, transition_states, DISTANCE) :
         canopies[near_name].append((i, name))
 
 i = 0
