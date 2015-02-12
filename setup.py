@@ -5,12 +5,12 @@ try:
 except ImportError :
     raise ImportError("setuptools module required, please go to https://pypi.python.org/pypi/setuptools and follow the instructions for installing setuptools")
 
-setup(name='Moman',
-      version='0.2.1',
-      description='A tools suite for orthographic/grammatical check',
-      author='Jean-Philippe Barrette-LaPierre',
-      author_email='jpb_NO_SPAM@rrette.com',
+setup(name='finenight',
+      version='0.1',
+      description="hacked on version of JPBL, moman library",
+      author='Jean-Philippe Barrette-LaPierre, Forest Gregg',
+      author_email='fgregg@gmail.com',
       ext_modules=[Extension('finenight.crecognize', ['src/crecognize.c'])],
-      url='http://rrette.com/moman.html',
+      url='https://github.com/datamade/moman',
       packages=['finenight']
       )
