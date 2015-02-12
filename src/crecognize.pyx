@@ -14,9 +14,9 @@ cpdef list innerLoop(states,
     cdef int wordLen = len(uword)
     cdef basestring V, q, q1, x
     cdef unicode word_chunk, each
-    cdef list stateType, state_type
+    cdef list stateType, state_type, transitions
     cdef dict word_states
-    cdef tuple state, all_state, transitions
+    cdef tuple state, all_state, transition
     cdef int index, new_index, match, cv
 
     while states :
@@ -28,8 +28,10 @@ cpdef list innerLoop(states,
 
         word_states = transitionsStates[chunk_size][repr(stateType)]
 
-        for transitions in fsa_states[q].transitions.items():
-            x, q1 = transitions
+        transitions = fsa_states[q].transitions.items()
+
+        for transition in transitions :
+            x, q1 = transition
             if x in word_chunk :
                 cv = 0
                 for each in word_chunk :
