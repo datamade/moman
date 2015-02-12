@@ -1,27 +1,34 @@
 import copy
 import types
 import pdb
-
+from collections import defaultdict, deque
+from crecognize import innerLoop
 
 class Position:
     def __init__(self, i, e, isTransposition):
         self.isTransposition = isTransposition
         self.i = i
         self.e = e
-        
+
     def __str__(self):
         val = str((self.i, self.e))
         if self.isTransposition:
             val = 't' + val
+
         return val
 
     def __repr__(self):
-        return str(self)
+        try :
+            return self._repr
+        except AttributeError :
+            r = self._repr = str(self)
+            return r
 
     def __eq__(lhs, rhs):
         return lhs.i == rhs.i and \
                lhs.e == rhs.e and \
                lhs.isTransposition == rhs.isTransposition
+
 
     def __lt__(lhs, rhs):
         if lhs.i < rhs.i:
@@ -225,41 +232,45 @@ def final(n, state, index, wordLen):
 
     
 class ErrorTolerantRecognizer:
-    def __init__(self, n, transitionsStates = None):
+    def __init__(self, n, fsa, transitionsStates = None):
         if transitionsStates is None:
             transitionsStates = handCraftedStates
         self.transitionsStates = transitionsStates
         self.n = n
-            
-    def recognize( self, word, fsa):
-        words = []
-        wordLen = len(word)
-        lstr = str
-        lint = int
+
+        new_states = {}
+        for i, states in enumerate(self.transitionsStates) :
+            cv_dict = {}
+            for cv, state_type in states.iteritems() :
+                cv_s = bitShift(eval(cv))
+                for k, v in state_type.items() :
+                    if k in cv_dict :
+                        cv_dict[k].update({cv_s : v})
+                    else :
+                        cv_dict[k] = {cv_s : v}
+            new_states[i] = cv_dict
+
+        self.transitionsStates = new_states
+
+        self.fsa = fsa
+        self.fsa_finalStates = set(fsa.finalStates)
+
+    def recognize( self, word):
+
+        states = [("", self.fsa.startState, [(0,0)], 0)]
+
+        results = innerLoop(states, word, 
+                            self.n, 
+                            self.transitionsStates, 
+                            self.fsa.states, 
+                            self.fsa_finalStates)
         
-        states = [("", fsa.startState, (str([(0,0)]), 0))]
-        while len(states):
-            (V, q, M) = states.pop()
-            word_chunk = word[M[1]:][:(2 * self.n + 1)]
-            word_states = self.transitionsStates[len(word_chunk)]
-            stateType, index = M
+        return results
 
-            for (x, q1) in fsa.states[q].transitions.items():
-                cv = [lint(char == x) for char in word_chunk]
-                cv = lstr(cv)
-                
-                state = word_states[cv][lstr(stateType)]
-                mPrime = (state[0], state[1] + index)
+def bitShift(L) :
+    out = 0
+    for bit in L :
+        out = (out << 1) | bit
+    out = (out << 1) | len(L)
 
-                if mPrime[0] != []:
-                    V1 = V + x
-                    states.append((V1, q1, mPrime))
-            if q in fsa.finalStates and final(self.n, M[0], M[1], wordLen) :
-                words.append(V)
-        return words
-
-
-
-def delta( (stateType, index), character, input, w ):
-    
-    return state
+    return out

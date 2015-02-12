@@ -1,5 +1,5 @@
 from finenight import iadfa
-from finenight import recognize
+from finenight import possibleStates
 from finenight import fsc 
 import csv
 from collections import defaultdict
@@ -23,15 +23,14 @@ for name in sorted_names :
 
 index.initSearch()
 
-transition_states = recognize.getTransitionStates("finenight/levenshtein.dat",
-                                                  DISTANCE)
+transition_states = possibleStates.genTransitions(DISTANCE)
 
-etr = fsc.ErrorTolerantRecognizer(DISTANCE, transition_states)
+etr = fsc.ErrorTolerantRecognizer(DISTANCE, index, transition_states)
 
 canopies = defaultdict(list)
 
 for i, name in enumerate(company_names) :
-    for near_name in etr.recognize(name, index) :
+    for near_name in etr.recognize(name) :
         canopies[near_name].append((i, name))
 
 i = 0
