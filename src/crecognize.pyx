@@ -28,7 +28,7 @@ cpdef list innerLoop(states,
 
         word_states = transitionsStates[chunk_size][repr(stateType)]
 
-        for transitions in fsa_states[q].transitions.viewitems():
+        for transitions in fsa_states[q].transitions.items():
             x, q1 = transitions
             if x in word_chunk :
                 cv = 0
